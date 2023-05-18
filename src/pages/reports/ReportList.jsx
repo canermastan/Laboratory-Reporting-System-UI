@@ -155,7 +155,7 @@ export default function ReportList() {
                 filterValue !== 4 &&
                 reports.map((report) => (
                   <Table.Row>
-                    <Table.Cell key={report.id}>{report.id}</Table.Cell>
+                    <Table.Cell key={report.id}>{report.reportNo}</Table.Cell>
                     <Table.Cell>{report.patientFirstName}</Table.Cell>
                     <Table.Cell>{report.patientLastName}</Table.Cell>
                     <Table.Cell>{report.patientIdentityNumber}</Table.Cell>
