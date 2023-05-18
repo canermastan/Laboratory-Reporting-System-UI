@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ReportService from "../../services/reportService";
 import {
   Button,
   Dropdown,
   Grid,
+  Pagination,
   Search,
   Table,
 } from "semantic-ui-react";
@@ -17,14 +18,28 @@ import { toast } from "react-toastify";
 export default function ReportList() {
   const [reports, setReports] = useState([]);
 
-  useEffect(() => {
-    let reportService = new ReportService();
-    reportService.getReports().then((result) => setReports(result.data));
-  }, []);
-
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState([]);
   const [value, setValue] = useState("");
+  const [activePage, setActivePage] = useState(1);
+  const [totalPages, setTotalPages] = useState(5);
+
+  useEffect(() => {
+    getReportsWithPagination(activePage);
+  }, []);
+
+  const handlePaginationChange = (e, { activePage }) => {
+    setActivePage(activePage);
+    getReportsWithPagination(activePage);
+  };
+
+  const getReportsWithPagination = (page) => {
+    let reportService = new ReportService();
+    reportService.getReportsWithPagination(page - 1).then((result) => {
+      setReports(result.data.data);
+      setTotalPages(parseInt(result.data.totalPages));
+    });
+  };
 
   const handleResultSelect = (e, { result }) => setValue(result.title);
 
@@ -120,7 +135,6 @@ export default function ReportList() {
               </Button>
             </Grid.Column>
           </Grid>
-
           <Table color="teal">
             <Table.Header>
               <Table.Row>
@@ -141,7 +155,7 @@ export default function ReportList() {
                 filterValue !== 4 &&
                 reports.map((report) => (
                   <Table.Row>
-                    <Table.Cell>{report.reportNo}</Table.Cell>
+                    <Table.Cell key={report.id}>{report.id}</Table.Cell>
                     <Table.Cell>{report.patientFirstName}</Table.Cell>
                     <Table.Cell>{report.patientLastName}</Table.Cell>
                     <Table.Cell>{report.patientIdentityNumber}</Table.Cell>
@@ -210,6 +224,14 @@ export default function ReportList() {
                       </Table.Cell>
                     </Table.Row>
                   ))}
+              <Pagination
+                boundaryRange={0}
+                defaultActivePage={1}
+                siblingRange={1}
+                totalPages={totalPages}
+                activePage={activePage}
+                onPageChange={handlePaginationChange}
+              />
             </Table.Body>
           </Table>
         </Grid.Column>

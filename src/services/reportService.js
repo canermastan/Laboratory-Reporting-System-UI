@@ -8,6 +8,9 @@ export default class ReportService {
     getReports(){
         return axios.get(`${API_URL}/all`, { headers: authHeader() });
     }
+    getReportsWithPagination(page){
+        return axios.get(`${API_URL}/all/${page}`, { headers: authHeader() });
+    }
     getReportById(id){
         return axios.get(`${API_URL}/${id}`, { headers: authHeader() });
     }
