@@ -1,6 +1,6 @@
 import React from 'react'
 import { useField } from "formik"
-import { FormTextArea, Label } from "semantic-ui-react"
+import { Label } from "semantic-ui-react"
 
 export default function TextArea({...props}) {
     const [field,meta] = useField(props)

@@ -25,4 +25,8 @@ export default class AuthService {
         localStorage.removeItem("token");
         localStorage.removeItem("role");
     }
+
+    isUserLoggedIn() {
+        return localStorage.getItem("token") !== null;
+    }
 }

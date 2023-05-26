@@ -6,15 +6,17 @@ import { Container } from 'semantic-ui-react';
 import Dashboard from './layouts/Dashboard';
 import "react-toastify/dist/ReactToastify.min.css"
 import Login from './pages/Login';
+import AuthService from './services/auth/authService';
 
 function App() {
+  
+  let authService = new AuthService();
+  let isUserLoggedIn = authService.isUserLoggedIn();
 
-  const isAuth = localStorage.getItem('token') ? true : false;
-
-  if(isAuth){
+  if(isUserLoggedIn){
     return (
       <div className='App'>
-        <Navbar />
+        <Navbar isUserLoggedIn={isUserLoggedIn} />
         <Container className='main' fluid>
           <Dashboard />
         </Container>

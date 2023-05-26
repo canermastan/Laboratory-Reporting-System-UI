@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from "react";
 import {
   Button,
-  Card,
   Confirm,
   Grid,
   Header,
-  Icon,
   Image,
   Popup,
 } from "semantic-ui-react";

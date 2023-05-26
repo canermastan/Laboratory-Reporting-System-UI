@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import ReportService from "../../services/reportService";
 import {
   Button,
@@ -8,7 +8,7 @@ import {
   Search,
   Table,
 } from "semantic-ui-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import _ from "lodash";
 import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -18,11 +18,15 @@ import { toast } from "react-toastify";
 export default function ReportList() {
   const [reports, setReports] = useState([]);
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [results, setResults] = useState([]);
   const [value, setValue] = useState("");
   const [activePage, setActivePage] = useState(1);
   const [totalPages, setTotalPages] = useState(5);
+
+  const [isShowPagination, setIsShowPagination] = useState(false);
+
+  const navigate = useNavigate();
+
+  let reportService = new ReportService();
 
   useEffect(() => {
     getReportsWithPagination(activePage);
@@ -34,42 +38,16 @@ export default function ReportList() {
   };
 
   const getReportsWithPagination = (page) => {
-    let reportService = new ReportService();
     reportService.getReportsWithPagination(page - 1).then((result) => {
       setReports(result.data.data);
       setTotalPages(parseInt(result.data.totalPages));
+      setIsShowPagination(true);
+      toast.success("Tüm raporlar listelendi.",  { autoClose: 2000 });
     });
   };
 
-  const handleResultSelect = (e, { result }) => setValue(result.title);
-
   const handleSearchChange = (e, { value }) => {
-    setIsLoading(true);
     setValue(value);
-    filter();
-  };
-
-  const filter = () => {
-    setTimeout(() => {
-      const re = new RegExp(_.escapeRegExp(value), "i");
-      const isMatch = (result) => {
-        if (filterValue === 1) {
-          return (
-            re.test(result.patientFirstName) || re.test(result.patientLastName)
-          );
-        } else if (filterValue === 2) {
-          return re.test(result.patientIdentityNumber);
-        } else if (filterValue === 3) {
-          return (
-            re.test(result.laboratoryTechnicianFirstName) ||
-            re.test(result.laboratoryTechnicianLastName)
-          );
-        }
-      };
-
-      setIsLoading(false);
-      setResults(_.filter(reports, isMatch));
-    }, 300);
   };
 
   const filterOptions = [
@@ -77,12 +55,90 @@ export default function ReportList() {
     { key: 2, text: "Hasta TC", value: 2 },
     { key: 3, text: "Laborant Adı/Soyadı", value: 3 },
     { key: 4, text: "Rapor Tarihi", value: 4 },
+    { key: 5, text: "Rapor Numarası", value: 5 },
+    { key: 6, text: "Tüm Raporlar", value: 6}
   ];
   const [filterValue, setFilterValue] = useState(1);
   const handleDropdownChange = (e, { value }) => setFilterValue(value);
 
   const [date, setDate] = useState(new Date());
   const handleDateChange = (date) => setDate(date);
+
+  const handleSearchButton = () => {
+
+    if (value === "" && filterValue !== 6 && filterValue !== 4) {
+      toast.error("Lütfen bir değer giriniz.");
+      return;
+    }
+
+    if (filterValue === 1) {
+      reportService.getReportsByPatientName(value).then((result) => {
+        setReports(result.data);
+        setIsShowPagination(false);
+
+        if (result.data.length === 0) {
+          toast.error("Rapor bulunamadı.");
+        }
+
+      })
+      .catch((result) => {
+        toast.error("Bir hata oluştu.");
+      });
+    } else if (filterValue === 2) {
+      reportService.getReportsByPatientIdentityNumber(value).then((result) => {
+        setReports(result.data);
+        setIsShowPagination(false);
+
+        if (result.data.length === 0) {
+          toast.error("Rapor bulunamadı.");
+        }
+
+      })
+      .catch((result) => {
+        toast.error("Bir hata oluştu.");
+      });
+    } else if (filterValue === 3) {
+      reportService.getReportsByLaboratoryTechnicianName(value).then((result) => {
+        setReports(result.data);
+        setIsShowPagination(false);
+        
+        if (result.data.length === 0) {
+          toast.error("Rapor bulunamadı.");
+        }
+
+      })
+      .catch((result) => {
+        toast.error("Bir hata oluştu.");
+      });
+    } else if (filterValue === 4) {
+      reportService
+        .getReportsByReportDate(format(date, "yyyy-MM-dd"))
+        .then((result) => {
+          setReports(result.data);
+          setIsShowPagination(false);
+
+          if (result.data.length === 0) {
+            toast.error("Rapor bulunamadı.");
+          }
+  
+        })
+        .catch((result) => {
+          toast.error("Bir hata oluştu.");
+        });
+    } else if (filterValue === 5) {
+      reportService.getReportByReportNo(value).then((result) => {
+        navigate(`/report/${result.data.id}`);
+      })
+      .catch((result) => {
+        toast.error("Rapor bulunamadı.");
+      });
+    } else if (filterValue === 6) {
+        setValue("");
+        setIsShowPagination(true);
+        getReportsWithPagination(activePage);
+    }
+  };
+
 
   return (
     <div>
@@ -96,8 +152,6 @@ export default function ReportList() {
             <Grid.Column>
               <Search
                 input={{ icon: "search", iconPosition: "left" }}
-                loading={isLoading}
-                onResultSelect={handleResultSelect}
                 onSearchChange={_.debounce(handleSearchChange, 500, {
                   leading: true,
                 })}
@@ -111,19 +165,28 @@ export default function ReportList() {
                 selection
                 options={filterOptions}
                 onChange={handleDropdownChange}
+                defaultValue={1}
               />
             </Grid.Column>
 
             {filterValue === 4 ? (
-              <Grid.Column>
-                <ReactDatePicker
-                  selected={date}
-                  onChange={(date) => handleDateChange(date)}
-                  dateFormat={"yyyy-MM-dd"}
-                />
-              </Grid.Column>
+              <div style={{ display: "inline-block", marginTop: 20 }}>
+                <Grid.Column>
+                  <ReactDatePicker
+                    selected={date}
+                    onChange={(date) => handleDateChange(date)}
+                    dateFormat={"yyyy-MM-dd"}
+                  />
+                </Grid.Column>
+              </div>
             ) : null}
-
+            <div style={{ display: "inline-block", marginTop: 15 }}>
+              <Grid.Column>
+                <Button primary onClick={handleSearchButton}>
+                  {filterValue === 5 ? "Rapora Git" : "Ara"}
+                </Button>
+              </Grid.Column>
+            </div>
             <Grid.Column floated="right">
               <Button
                 as={Link}
@@ -138,7 +201,7 @@ export default function ReportList() {
           <Table color="teal">
             <Table.Header>
               <Table.Row>
-                <Table.HeaderCell>Dosya Numarası</Table.HeaderCell>
+                <Table.HeaderCell>Rapor Numarası</Table.HeaderCell>
                 <Table.HeaderCell>Hasta Adı</Table.HeaderCell>
                 <Table.HeaderCell>Hasta Soyadı</Table.HeaderCell>
                 <Table.HeaderCell>Hasta TC</Table.HeaderCell>
@@ -151,8 +214,6 @@ export default function ReportList() {
 
             <Table.Body>
               {reports &&
-                value.length < 1 &&
-                filterValue !== 4 &&
                 reports.map((report) => (
                   <Table.Row>
                     <Table.Cell key={report.id}>{report.reportNo}</Table.Cell>
@@ -174,64 +235,16 @@ export default function ReportList() {
                     </Table.Cell>
                   </Table.Row>
                 ))}
-              {value.length > 0 &&
-                results.map((report) => (
-                  <Table.Row>
-                    <Table.Cell>{report.reportNo}</Table.Cell>
-                    <Table.Cell>{report.patientFirstName}</Table.Cell>
-                    <Table.Cell>{report.patientLastName}</Table.Cell>
-                    <Table.Cell>{report.patientIdentityNumber}</Table.Cell>
-                    <Table.Cell>{report.diagnosisTitle}</Table.Cell>
-                    <Table.Cell>{report.reportDate}</Table.Cell>
-                    <Table.Cell>
-                      <Link to={`/report/${report.id}`}>
-                        <Button color="teal">Detaylar</Button>
-                      </Link>
-                    </Table.Cell>
-
-                    <Table.Cell>
-                      <Link to={`/report/edit/${report.id}`}>
-                        <Button color="orange">Düzenle</Button>
-                      </Link>
-                    </Table.Cell>
-                  </Table.Row>
-                ))}
-
-              {filterValue === 4 &&
-                value.length < 1 &&
-                reports
-                  .filter(
-                    (report) => report.reportDate === format(date, "yyyy-MM-dd")
-                  )
-                  .map((report) => (
-                    <Table.Row>
-                      <Table.Cell>{report.reportNo}</Table.Cell>
-                      <Table.Cell>{report.patientFirstName}</Table.Cell>
-                      <Table.Cell>{report.patientLastName}</Table.Cell>
-                      <Table.Cell>{report.patientIdentityNumber}</Table.Cell>
-                      <Table.Cell>{report.diagnosisTitle}</Table.Cell>
-                      <Table.Cell>{report.reportDate}</Table.Cell>
-                      <Table.Cell>
-                        <Link to={`/report/${report.id}`}>
-                          <Button color="teal">Detaylar</Button>
-                        </Link>
-                      </Table.Cell>
-
-                      <Table.Cell>
-                        <Link to={`/report/edit/${report.id}`}>
-                          <Button color="orange">Düzenle</Button>
-                        </Link>
-                      </Table.Cell>
-                    </Table.Row>
-                  ))}
-              <Pagination
-                boundaryRange={0}
-                defaultActivePage={1}
-                siblingRange={1}
-                totalPages={totalPages}
-                activePage={activePage}
-                onPageChange={handlePaginationChange}
-              />
+              {isShowPagination ? (
+                <Pagination
+                  boundaryRange={0}
+                  defaultActivePage={1}
+                  siblingRange={1}
+                  totalPages={totalPages}
+                  activePage={activePage}
+                  onPageChange={handlePaginationChange}
+                />
+              ) : null}
             </Table.Body>
           </Table>
         </Grid.Column>

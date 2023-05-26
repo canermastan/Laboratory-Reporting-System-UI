@@ -5,7 +5,6 @@ import ReportDetail from "../pages/reports/ReportDetail";
 import ReportList from "../pages/reports/ReportList";
 import ReportEdit from "../pages/reports/ReportEdit";
 import { ToastContainer } from "react-toastify";
-import Login from "../pages/Login";
 import ReportAdd from "../pages/reports/ReportAdd";
 
 export default function Dashboard() {

@@ -1,8 +1,5 @@
 import React, {
-  createRef,
   useEffect,
-  useReducer,
-  useRef,
   useState,
 } from "react";
 import { useNavigate, useParams } from "react-router";
@@ -20,13 +17,11 @@ export default function ReportEdit() {
   const navigate = useNavigate();
 
   const [report, setReport] = useState({});
-  const [laboratoryTechnician, setLaboratoryTechnician] = useState({});
 
   useEffect(() => {
     let reportService = new ReportService();
     reportService.getReportById(id).then((result) => {
       setReport(result.data);
-      setLaboratoryTechnician(result.data.laboratoryTechnician);
     });
   }, []);
 
@@ -51,6 +46,7 @@ export default function ReportEdit() {
     patientLastName: Yup.string().required("Hasta Soyadı zorunlu"),
     patientIdentityNumber: Yup.string()
       .required("Hasta TC zorunlu")
+      .min(11, "TC minimum 11 karakter olabilir")
       .max(11, "TC maksimum 11 karakter olabilir"),
   });
 
@@ -82,6 +78,7 @@ export default function ReportEdit() {
     const formData = new FormData();
     formData.append("file", file);
     reportService.uploadReportImage(id, formData).then((result) => {
+      console.log(result);
       toast.success("Rapor görseli başarıyla güncellendi");
       setTimeout(() => {
         navigate(`/report/${id}`);
@@ -99,16 +96,18 @@ export default function ReportEdit() {
             <Icon name="images outline" />
             Rapor görselini güncelle
           </Header>
-          <form>
+          <form style={{marginLeft: 30}}>
             <input
               type="file"
               name="file"
               onChange={(e) => handleFileInput(e)}
             />
           </form>
-          <Button color="green" onClick={() => handleFileUpload()}>
-            Kaydet
-          </Button>
+          <div style={{marginTop:15}}>
+            <Button color="green" onClick={() => handleFileUpload()}>
+              Görseli Kaydet
+            </Button>
+          </div>
         </Segment>
 
         <Formik

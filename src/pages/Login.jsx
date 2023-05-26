@@ -4,11 +4,8 @@ import { Button, Grid, Header, Image, Message, Segment } from "semantic-ui-react
 import * as Yup from "yup";
 import TextInput from "../utilities/customFormElements/TextInput";
 import AuthService from "../services/auth/authService";
-import { toast } from "react-toastify";
-import { useNavigate, useRouteLoaderData } from "react-router";
 
 export default function Login() {
-  let navigate = useNavigate();
 
   const schema = Yup.object({
     email: Yup.string()
@@ -32,7 +29,6 @@ export default function Login() {
       .login(values.email, values.password)
       .then((result) => {
         if (result.token !== null) {
-          toast.success("Giriş başarılı.");
           window.location.reload();
         }
       })

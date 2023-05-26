@@ -1,7 +1,7 @@
 import { Formik, Form } from "formik";
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Grid, Header, Icon, Segment } from "semantic-ui-react";
+import { Button, Grid, Header } from "semantic-ui-react";
 import TextInput from "../../utilities/customFormElements/TextInput";
 import TextArea from "../../utilities/customFormElements/TextArea";
 import * as Yup from "yup";
@@ -17,7 +17,6 @@ export default function ReportAdd() {
     patientFirstName: "",
     patientLastName: "",
     patientIdentityNumber: "",
-    reportNo: "",
   };
 
   const schema = Yup.object({
@@ -27,6 +26,7 @@ export default function ReportAdd() {
     patientLastName: Yup.string().required("Hasta Soyadı zorunlu"),
     patientIdentityNumber: Yup.string()
       .required("Hasta TC zorunlu")
+      .min(11, "TC minimum 11 karakter olabilir")
       .max(11, "TC maksimum 11 karakter olabilir"),
   });
 
@@ -61,8 +61,6 @@ export default function ReportAdd() {
             <TextInput name="patientLastName" placeholder="Hasta Soyadı" />
             <Header size="tiny">Hasta TC</Header>
             <TextInput name="patientIdentityNumber" placeholder="Hasta TC" />
-            <Header size="tiny">Rapor Numarası</Header>
-            <TextInput name="reportNo" placeholder="Rapor Numarası" />
             <Button color="green" type="submit" size="large">
               Kaydet
             </Button>

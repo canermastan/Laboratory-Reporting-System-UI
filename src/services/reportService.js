@@ -27,6 +27,21 @@ export default class ReportService {
         return axios.get(`/image/download/${id}`, { headers: authHeader() });
     }
     uploadReportImage(id, data) {
-        return axios.post(`/image/upload/${id}`, data, { headers: authHeader() }, { headers: { 'Content-Type': 'multipart/form-data' } });
+        return axios.post(`${API_URL}/image/upload/${id}`, data, { headers: authHeader() }, { headers: { 'Content-Type': 'multipart/form-data' } });
+    }
+    getReportsByPatientName(name){
+        return axios.get(`${API_URL}/all-by-patient-name?name=${encodeURIComponent(name)}`, { headers: authHeader() });
+    }
+    getReportsByPatientIdentityNumber(identityNumber){
+        return axios.get(`${API_URL}/all-by-patient-identity-number?id=${encodeURIComponent(identityNumber)}`, { headers: authHeader() });
+    }
+    getReportsByReportDate(reportDate){
+        return axios.get(`${API_URL}/all-by-report-date?date=${encodeURIComponent(reportDate)}`, { headers: authHeader() });
+    }
+    getReportsByLaboratoryTechnicianName(name){
+        return axios.get(`${API_URL}/all-by-laboratory-technician-name?name=${encodeURIComponent(name)}`, { headers: authHeader() });
+    }
+    getReportByReportNo(reportNo){
+        return axios.get(`${API_URL}/report-no/${reportNo}`, { headers: authHeader() });
     }
 }
